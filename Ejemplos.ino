@@ -34,7 +34,7 @@ void loop() {
 
   if (tiempoActual - tiempoAnterior >= intervalo) {
     tiempoAnterior = tiempoActual;
-    pcf.digitalWrite(numeroPin, !pcf.digitalRead(numeroPin));    // Establece el pin actual en HIGH
+    pcf.digitalWrite(numeroPin, !pcf.digitalRead(numeroPin));
     Serial.println(numeroPin);  
     numeroPin++;
     if (numeroPin > 7) numeroPin = 0;     
