@@ -10,12 +10,12 @@ public:
   void begin();
   void pinMode(uint8_t pin, uint8_t mode);
   void digitalWrite(uint8_t pin, bool value);
-  uint8_t digitalRead(uint8_t pin);
+  bool digitalRead(uint8_t pin);
 
 private:
   uint8_t _ADDR_I2C;
   uint16_t _estadoPines;
-  uint16_t _estadoSalida;
+  void sendData(uint16_t value);
 };
 
 #endif
