@@ -1,7 +1,7 @@
 #include "MUX_PCF8575.h"
 #include "Arduino.h"
 
-MUX_PCF8575::MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines = 0x0000) {
+MUX_PCF8575::MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines) {
   _ADDR_I2C = ADDR_I2C;
   _estadoPines = 0xFFFF;               // Por defecto, todos los pines son entradas
   _estadoSalida = estadoInicialPines;  // Inicialmente, todos los pines están en LOW
