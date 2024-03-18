@@ -5,7 +5,7 @@
 
 class MUX_PCF8575 {
 public:
-  MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines);
+  MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines = 0x0000);
 
   void begin();
   void pinMode(uint8_t pin, uint8_t mode);
