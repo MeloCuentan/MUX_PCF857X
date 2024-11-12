@@ -11,10 +11,13 @@ bool MUX_PCF8575::begin()
 {
   // Prueba de comunicación con el dispositivo
   Wire.beginTransmission(_ADDR_I2C);
+  delayMicroseconds(10);
   uint8_t result = Wire.endTransmission();
+
   if (result != 0) return false;  // Retorna false si la inicialización falla
 
   sendData(0xFFFF);  // Inicializar todos como entrada
+  delayMicroseconds(10);
   sendData(_estadoPines);
 
   return true;  // Retorna true si la inicialización es exitosa
