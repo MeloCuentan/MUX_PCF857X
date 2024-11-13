@@ -1,26 +1,23 @@
 #include <MUX_PCF8575.h>
 #include "Arduino.h"
 
-MUX_PCF8575::MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines)
+MUX_PCF8575::MUX_PCF8575(uint8_t ADDR_I2C)
 {
   _ADDR_I2C = ADDR_I2C;
-  _estadoPines = estadoInicialPines; // Inicialmente, todos los pines están en LOW
 }
 
-bool MUX_PCF8575::begin()
+bool MUX_PCF8575::begin(uint16_t estadoInicialPines)
 {
-  // Prueba de comunicación con el dispositivo
+  _estadoPines = estadoInicialPines; // Inicialmente, todos los pines están en LOW
   Wire.beginTransmission(_ADDR_I2C);
-  Wire.write(0xFF);
-  Wire.write(0xFF);
+  Wire.write(lowByte(_estadoPines));
+  Wire.write(highByte(_estadoPines));
   uint8_t result = Wire.endTransmission();
 
-  if (result != 0) return false;  // Retorna false si la inicialización falla
+  if (result != 0)
+    return false; // Retorna false si la inicialización falla
 
-  sendData(0xFFFF);  // Inicializar todos como entrada
-  sendData(_estadoPines);
-
-  return true;  // Retorna true si la inicialización es exitosa
+  return true; // Retorna true si la inicialización es exitosa
 }
 
 void MUX_PCF8575::pinMode(uint8_t pin, uint8_t mode)
@@ -64,10 +61,9 @@ void MUX_PCF8575::sendData(uint16_t value)
 bool MUX_PCF8575::digitalRead(uint8_t pin)
 {
   Wire.beginTransmission(_ADDR_I2C);
-  Wire.endTransmission(); // Termina la transmisión y obtiene el resultado
-
-  Wire.requestFrom(_ADDR_I2C, (uint8_t)2); // Solicita 2 bytes desde la dirección I2C del dispositivo
-  uint16_t data = Wire.read();             // Lee el primer byte
-  data |= (Wire.read() << 8);              // Lee el segundo byte y lo desplaza para formar un uint16_t
-  return (data >> pin) & 0x01;             // Retorna el estado del pin solicitado
+  Wire.endTransmission();
+  Wire.requestFrom(_ADDR_I2C, (uint8_t)2);
+  uint16_t data = Wire.read();
+  data |= (Wire.read() << 8);
+  return (data >> pin) & 0x01;
 }
