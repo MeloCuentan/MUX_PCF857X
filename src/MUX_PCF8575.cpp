@@ -11,6 +11,8 @@ bool MUX_PCF8575::begin()
 {
   // Prueba de comunicación con el dispositivo
   Wire.beginTransmission(_ADDR_I2C);
+  Wire.write(0xFF);
+  Wire.write(0xFF);
   uint8_t result = Wire.endTransmission();
 
   if (result != 0) return false;  // Retorna false si la inicialización falla
