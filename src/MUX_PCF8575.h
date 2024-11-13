@@ -5,9 +5,9 @@
 
 class MUX_PCF8575 {
 public:
-  MUX_PCF8575(uint8_t ADDR_I2C, uint16_t estadoInicialPines = 0x0000);
+  MUX_PCF8575(uint8_t ADDR_I2C);
 
-  bool begin();
+  bool begin(uint16_t estadoInicialPines = 0x0000);
   void pinMode(uint8_t pin, uint8_t mode);
   void digitalWrite(uint8_t pin, bool value);
   bool digitalRead(uint8_t pin);
