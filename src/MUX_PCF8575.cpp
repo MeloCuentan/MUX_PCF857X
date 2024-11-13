@@ -11,13 +11,11 @@ bool MUX_PCF8575::begin()
 {
   // Prueba de comunicación con el dispositivo
   Wire.beginTransmission(_ADDR_I2C);
-  delayMicroseconds(10);
   uint8_t result = Wire.endTransmission();
 
   if (result != 0) return false;  // Retorna false si la inicialización falla
 
   sendData(0xFFFF);  // Inicializar todos como entrada
-  delayMicroseconds(10);
   sendData(_estadoPines);
 
   return true;  // Retorna true si la inicialización es exitosa
@@ -59,17 +57,14 @@ void MUX_PCF8575::sendData(uint16_t value)
   Wire.write(lowByte(value));
   Wire.write(highByte(value));
   Wire.endTransmission();
-  delayMicroseconds(10);
 }
 
 bool MUX_PCF8575::digitalRead(uint8_t pin)
 {
   Wire.beginTransmission(_ADDR_I2C);
   Wire.endTransmission(); // Termina la transmisión y obtiene el resultado
-  delayMicroseconds(10);
 
   Wire.requestFrom(_ADDR_I2C, (uint8_t)2); // Solicita 2 bytes desde la dirección I2C del dispositivo
-  delayMicroseconds(10);
   uint16_t data = Wire.read();             // Lee el primer byte
   data |= (Wire.read() << 8);              // Lee el segundo byte y lo desplaza para formar un uint16_t
   return (data >> pin) & 0x01;             // Retorna el estado del pin solicitado
