@@ -1,5 +1,5 @@
-#ifndef MUX_PCF_h
-#define MUX_PCF_h
+#ifndef MUX_PCF857X_h
+#define MUX_PCF857X_h
 
 #include <Wire.h>
 #include <Arduino.h>
