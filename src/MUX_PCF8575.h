@@ -4,8 +4,8 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-enum MUX_Type
-{ // Tipos de multiplexores
+enum MUX_Type  // Tipos de multiplexores
+{ 
   PCF8574,
   PCF8575
 };
