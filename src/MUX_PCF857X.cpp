@@ -20,11 +20,7 @@ MUX_PCF::MUX_PCF(uint8_t ADDR_I2C, MUX_Type type, TwoWire *wire)
 bool MUX_PCF::begin(uint16_t estadoInicialPines)
 {
   _estadoPines = (_type == PCF8574) ? (estadoInicialPines & 0x00FF) : estadoInicialPines; // Establece el estado inicial de los pines
-  _wire->beginTransmission(_ADDR_I2C);                                                    // Inicia la transmisión
-  _wire->write(lowByte(_estadoPines));                                                    // Envía el byte menos significativo
-  if (_type == PCF8575)                                                                   // Si es un PCF8575
-    _wire->write(highByte(_estadoPines));                                                 // Envía el byte más significativo
-  uint8_t result = Wire.endTransmission();                                                // Finaliza la transmisión
+  uint8_t result = sendData(_estadoPines);                                                // Envía el estado de los pines
   return result == 0;                                                                     // Devuelve verdadero si la transmisión fue exitosa
 }
 
@@ -103,11 +99,11 @@ void MUX_PCF::setPinState(uint16_t value) // Método para establecer el estado d
  * @brief Método privado para enviar datos al multiplexor
  * @param value Valor a enviar
  */
-void MUX_PCF::sendData(uint16_t value)
+uint8_t MUX_PCF::sendData(uint16_t value)
 {
   _wire->beginTransmission(_ADDR_I2C); // Inicia la transmisión
   _wire->write(lowByte(value));        // Envía el byte menos significativo
   if (_type == PCF8575)                // Si es un PCF8575
     _wire->write(highByte(value));     // Envía el byte más significativo
-  _wire->endTransmission();            // Finaliza la transmisión
+  return _wire->endTransmission();     // Finaliza la transmisión
 }
