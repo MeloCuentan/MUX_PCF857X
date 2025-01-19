@@ -1,8 +1,8 @@
-#include "MUX_PCF8575.h"  // Agregamos la librería
+#include "MUX_PCF857X.h"  // Agregamos la librería
 
 const uint8_t ADDR_PCF = 0x20;  // Asignamos la dirección I2C del multiplexor
 
-MUX_PCF8575 pcf(ADDR_PCF);  // Creamos el objeto con la dirección I2C
+MUX_PCF pcf(ADDR_PCF, PCF8575, &Wire);  // Creamos el objeto con la dirección I2C, el tipo de PCF y el bus I2C que se utilizará
 
 uint32_t tiempoActual, tiempoAnterior; // Estas variables serán para el control del funcionamiento
 uint32_t intervalo = 500;  // Cada vez que se pase ese tiempo, habrá un cambio en los pines de salida
@@ -10,8 +10,8 @@ uint8_t numeroPin = 0;
 
 void setup() {
   Serial.begin(115200);
-
-  pcf.begin();  // Inicializamos el objeto
+  Wire.begin(SDA, SCL, 100000);  // Inicializamos el bus I2C
+  pcf.begin(0x00FF);  // Inicializamos el objeto
 
   // *************  comprobar pines como salida ***************
   for (uint8_t i = 0; i < 8; i++) {  // Creamos un bucle para recorrer los pines de P0 a P07
