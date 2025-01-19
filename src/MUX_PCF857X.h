@@ -28,7 +28,7 @@ private:
   uint16_t _estadoPines;         // Estado de los pines
   MUX_Type _type;                // Tipo de multiplexor
   TwoWire *_wire;                // Puntero al bus I2C
-  void sendData(uint16_t value); // Enviar datos al multiplexor
+  uint8_t sendData(uint16_t value); // Enviar datos al multiplexor
 };
 
 #endif
