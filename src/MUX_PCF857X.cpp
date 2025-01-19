@@ -98,6 +98,7 @@ void MUX_PCF::setPinState(uint16_t value) // Método para establecer el estado d
 /**
  * @brief Método privado para enviar datos al multiplexor
  * @param value Valor a enviar
+ * @return Resultado de la transmisión
  */
 uint8_t MUX_PCF::sendData(uint16_t value)
 {
