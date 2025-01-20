@@ -24,9 +24,9 @@ const uint8_t pinSCL = 19;           // Pin SCL del I2C_OUT
 const uint8_t pinInterrupcion = 18;  // Pin de interrupción del PCF8574
 const uint8_t pinPulsador = 14;      // Pin del pulsador
 
-const uint8_t NUM_ENCODERS = 8;      // Número de encoders
-const int8_t VALOR_MINIMO = -100; // Valor mínimo del encoder
-const int8_t VALOR_MAXIMO = 100;  // Valor máximo del encoder
+const uint8_t NUM_ENCODERS = 8;     // Número de encoders
+const int8_t VALOR_MINIMO = -100;   // Valor mínimo del encoder
+const int8_t VALOR_MAXIMO = 100;    // Valor máximo del encoder
 uint8_t pinA[NUM_ENCODERS];         // Pines A de los encoders
 uint8_t pinB[NUM_ENCODERS];         // Pines B de los encoders
 uint8_t currentState[NUM_ENCODERS]; // Estado actual de los encoders
@@ -35,7 +35,7 @@ volatile uint16_t estadoPins;                          // Estado de los pines de
 volatile uint8_t lastStates[NUM_ENCODERS] = {0};       // Último estado de los encoders
 volatile int8_t encoderSteps[NUM_ENCODERS] = {0};      // Pasos de los encoders
 volatile int16_t lastEncoderSteps[NUM_ENCODERS] = {0}; // Últimos pasos de los encoders
-volatile bool interrupcionDetectada = false; // Variable para saber si se ha leído el valor del pulsador
+volatile bool interrupcionDetectada = false;           // Variable para saber si se ha leído el valor del pulsador
 
 uint32_t tiempoActual;           // Variable de tiempo actual del programa
 uint32_t tiempoAnterior;         // Variable de tiempo anterior del programa
@@ -51,8 +51,8 @@ void setup()
 
   crearTareas(); // Crear las tareas del sistema
 
-  pinMode(pinPulsador, INPUT_PULLUP);                                               // Pin del pulsador como entrada con resistencia de pull-up
-  pinMode(pinInterrupcion, INPUT_PULLUP);                                           // Pin de interrupción como entrada con resistencia de pull-up
+  pinMode(pinPulsador, INPUT_PULLUP);                                    // Pin del pulsador como entrada con resistencia de pull-up
+  pinMode(pinInterrupcion, INPUT_PULLUP);                                // Pin de interrupción como entrada con resistencia de pull-up
   attachInterrupt(digitalPinToInterrupt(pinInterrupcion), ISR, FALLING); // Interrupción para la lectura de los pulsadores
 
   Wire1.begin(pinSDA, pinSCL, 400000); // Iniciar puerto I2C adicional
@@ -61,7 +61,7 @@ void setup()
 
 void loop()
 {
-  tiempoActual = millis();                        // Obtener el tiempo actual
+  tiempoActual = millis(); // Obtener el tiempo actual
   
   if (digitalRead(pinPulsador) == LOW) // Si el pulsador se ha presionado
   {
