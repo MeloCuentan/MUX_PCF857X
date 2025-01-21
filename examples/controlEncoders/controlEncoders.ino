@@ -76,15 +76,6 @@ void loop()
     tiempoAnterior = tiempoActual; // Actualizar el tiempo anterior
     Serial.print(millis() / 1000); // Mostrar el tiempo en segundos
     Serial.println("sg");          // Mostrar el texto "sg"
-
-    // for (uint8_t i = 0; i < NUM_ENCODERS; i++) {
-    //   Serial.print("Encoder "); // Mostrar el texto "Encoder"
-    //   Serial.print(i + 1);      // Mostrar el número del encoder
-    //   Serial.print(": ");       // Mostrar el texto ": "
-    //   Serial.print(encoderSteps[i]); // Mostrar el valor del encoder
-    //   Serial.print(" | ");           // Mostrar el texto " | "
-    // }
-    // Serial.println(); // Mostrar un salto de línea
   }
 
   for (uint8_t i = 0; i < NUM_ENCODERS; i++) // Recorremos todos los encoders
