@@ -7,17 +7,18 @@
   En el ejemplo hay un valor máximo y mínimo conún a todos los encoders
   En el monitor serial aparecerá un contador de segundos, y mientras eso está funcionando, podremos 
   mover los encoders apareciendo el número del encoder que se ha movido y su valor
+  Se ha mejorado la función controlEncoders y añadido que la tarea se ejecute con la interrupción
 */
 
 #include <Wire.h>
-#include "MUX_PCF857X.h" // https://github.com/MeloCuentan/MUX_PCF857X
+#include <MUX_PCF857X.h> // https://github.com/MeloCuentan/MUX_PCF857X
 
-void IRAM_ATTR ISR(); // Leer todas las entradas del PCF8574 y la del interruptor externo
-void controlEncoders();          // Control de los encoders
-void crearTareas();              // Crear las tareas del sistema
-void leerPCF(void *parameter);   // Leer el estado de los pines del PCF8574
+void IRAM_ATTR ISR();          // Leer todas las entradas del PCF8574 y la del interruptor externo
+void controlEncoders();        // Control de los encoders
+void crearTareas();            // Crear las tareas del sistema
+void leerPCF(void *parameter); // Leer el estado de los pines del PCF8574
 
-const uint8_t ADDR_PCF = 0x20;
+const uint8_t ADDR_PCF = 0x20;       // Dirección del PCF8574
 const uint8_t cantidadEntradas = 16; // Cantidad de encoders
 const uint8_t pinSDA = 23;           // Pin SDA del I2C_OUT
 const uint8_t pinSCL = 19;           // Pin SCL del I2C_OUT
@@ -31,17 +32,16 @@ uint8_t pinA[NUM_ENCODERS];         // Pines A de los encoders
 uint8_t pinB[NUM_ENCODERS];         // Pines B de los encoders
 uint8_t currentState[NUM_ENCODERS]; // Estado actual de los encoders
 
-volatile uint16_t estadoPins;                          // Estado de los pines del PCF8574
-volatile uint8_t lastStates[NUM_ENCODERS] = {0};       // Último estado de los encoders
-volatile int8_t encoderSteps[NUM_ENCODERS] = {0};      // Pasos de los encoders
-volatile int16_t lastEncoderSteps[NUM_ENCODERS] = {0}; // Últimos pasos de los encoders
-volatile bool interrupcionDetectada = false;           // Variable para saber si se ha leído el valor del pulsador
+uint16_t estadoPins;                          // Estado de los pines del PCF8574
+uint8_t lastStates[NUM_ENCODERS] = {0};       // Último estado de los encoders
+int8_t encoderSteps[NUM_ENCODERS] = {0};      // Pasos de los encoders
+int16_t lastEncoderSteps[NUM_ENCODERS] = {0}; // Últimos pasos de los encoders
 
 uint32_t tiempoActual;           // Variable de tiempo actual del programa
 uint32_t tiempoAnterior;         // Variable de tiempo anterior del programa
 const uint32_t intervalo = 1000; // Intervalo de tiempo para la lectura de los pulsadores
 
-TaskHandle_t leerPinesPCF;
+TaskHandle_t leerPinesPCF;              // Manejador de la tarea de lectura de los pines del PCF8574
 MUX_PCF pcf(ADDR_PCF, PCF8575, &Wire1); // Multiplexor PCF8575 en la dirección 0x20 y en el puerto I2C adicional
 
 void setup()
@@ -62,7 +62,7 @@ void setup()
 void loop()
 {
   tiempoActual = millis(); // Obtener el tiempo actual
-  
+
   if (digitalRead(pinPulsador) == LOW) // Si el pulsador se ha presionado
   {
     for (uint8_t i = 0; i < NUM_ENCODERS; i++) // Recorremos todos los encoders
@@ -70,15 +70,22 @@ void loop()
       encoderSteps[i] = 0; // Reiniciar el valor de los encoders
     }
   }
-  
+
   if (tiempoActual - tiempoAnterior >= intervalo) // Si ha pasado el intervalo de tiempo
   {
     tiempoAnterior = tiempoActual; // Actualizar el tiempo anterior
     Serial.print(millis() / 1000); // Mostrar el tiempo en segundos
     Serial.println("sg");          // Mostrar el texto "sg"
+
+    // for (uint8_t i = 0; i < NUM_ENCODERS; i++) {
+    //   Serial.print("Encoder "); // Mostrar el texto "Encoder"
+    //   Serial.print(i + 1);      // Mostrar el número del encoder
+    //   Serial.print(": ");       // Mostrar el texto ": "
+    //   Serial.print(encoderSteps[i]); // Mostrar el valor del encoder
+    //   Serial.print(" | ");           // Mostrar el texto " | "
+    // }
+    // Serial.println(); // Mostrar un salto de línea
   }
-
-
 
   for (uint8_t i = 0; i < NUM_ENCODERS; i++) // Recorremos todos los encoders
   {
@@ -95,59 +102,65 @@ void loop()
 
 void crearTareas()
 {
-  xTaskCreatePinnedToCore(
+  xTaskCreate(        // Crear la tarea leerPCF
       leerPCF,        // Función de la tarea
-      "leerEncoders", // Nombre de la tarea
-      10000,          // Tamaño de la pila
+      "LeerPCF",      // Nombre de la tarea
+      2048,           // Tamaño de la pila
       NULL,           // Parámetro de la tarea
       1,              // Prioridad de la tarea
-      &leerPinesPCF,  // Manejador de la tarea
-      0);             // Núcleo de la tarea (0 o 1)
+      &leerPinesPCF); // Manejador de la tarea
 }
 
 void leerPCF(void *parameter)
 {
-  for (;;) // Bucle infinito
+  for (;;)
   {
-    if (interrupcionDetectada == true) // Si se ha detectado una interrupción
-    {
-      interrupcionDetectada = false; // Reiniciamos la variable de interrupción
-      controlEncoders();             // Control de los encoders
-    }
-    vTaskDelay(1); // Retardo de 1 ms
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // Espera indefinidamente a la notificación
+    controlEncoders();                       // Ejecutar el control de encoders cuando la notificación llegue
   }
 }
 
 void IRAM_ATTR ISR()
 {
-  interrupcionDetectada = true; // Indicamos que se ha leído el valor del pulsador
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  vTaskNotifyGiveFromISR(leerPinesPCF, &xHigherPriorityTaskWoken); // Notificar a la tarea leerPCF
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);                    // Realizar un cambio de contexto si es necesario
 }
 
 void controlEncoders()
 {
-  estadoPins = pcf.getPinState(); // Leemos el estado de todos los pines de una vez
+  estadoPins = pcf.getPinState(); // Leer todos los pines de una vez
 
-  for (uint8_t encoderIndex = 0; encoderIndex < NUM_ENCODERS; encoderIndex++) // Recorremos todos los encoders
-  {
-    // Leer los pines A y B por separado
-    pinA[encoderIndex] = (estadoPins >> (encoderIndex * 2)) & 0b01;     // Desplazamos 0 bits a la derecha y aplicamos una máscara de bits
-    pinB[encoderIndex] = (estadoPins >> (encoderIndex * 2 + 1)) & 0b01; // Desplazamos 1 bit a la derecha y aplicamos una máscara de bits
+  for (uint8_t encoderIndex = 0; encoderIndex < NUM_ENCODERS; encoderIndex++) // Recorrer todos los encoders
+  {                                                                           // Calcular los estados de los pines A y B de este encoder
+    uint8_t pinOffset = encoderIndex * 2;                                     // Optimizar el cálculo del desplazamiento
+    pinA[encoderIndex] = (estadoPins >> pinOffset) & 0b01;                    // Obtener el pin A
+    pinB[encoderIndex] = (estadoPins >> (pinOffset + 1)) & 0b01;              // Obtener el pin B
 
-    currentState[encoderIndex] = (pinA[encoderIndex] << 1) | pinB[encoderIndex]; // Combinamos los estados de A y B en un valor de 2 bits
+    currentState[encoderIndex] = (pinA[encoderIndex] << 1) | pinB[encoderIndex]; // Combinar en un valor de 2 bits
 
-    if (currentState[encoderIndex] != lastStates[encoderIndex]) // Verificar si el estado ha cambiado
+    if (currentState[encoderIndex] == lastStates[encoderIndex]) // Si el estado no cambió, pasamos al siguiente encoderIndex
+      continue;
+
+    switch (lastStates[encoderIndex]) // Estado anterior del encoder
     {
-      if (lastStates[encoderIndex] == 0b01 && currentState[encoderIndex] == 0b11) // Giro horario: se realiza solo si el centro se alcanza (ambos pines = 1)
+    case 0b01: // Estado anterior: 01 -> Giro en sentido horario
+      if (currentState[encoderIndex] == 0b11)
       {
         if (encoderSteps[encoderIndex] < VALOR_MAXIMO) // Si el valor del encoder es menor que el máximo
           encoderSteps[encoderIndex]++;                // Incrementar el valor del encoder
       }
-      else if (lastStates[encoderIndex] == 0b10 && currentState[encoderIndex] == 0b11) // Giro antihorario: se realiza solo si el centro se alcanza (ambos pines = 1)
+      break;
+
+    case 0b10: // Estado anterior: 10 -> Giro en sentido antihorario
+      if (currentState[encoderIndex] == 0b11)
       {
         if (encoderSteps[encoderIndex] > VALOR_MINIMO) // Si el valor del encoder es mayor que el mínimo
           encoderSteps[encoderIndex]--;                // Decrementar el valor del encoder
       }
-      lastStates[encoderIndex] = currentState[encoderIndex]; // Guardar el nuevo estado como el último estado
+      break;
     }
+
+    lastStates[encoderIndex] = currentState[encoderIndex]; // Actualizar el último estado
   }
 }
